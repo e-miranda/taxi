@@ -1,25 +1,26 @@
-# Dockerfile for React Admin Dashboard with Node.js 18 and Vite
+﻿FROM php:8.2-apache
 
-# Use the official Node.js 18 as the base image
-FROM node:18
-
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+RUN apt-get update && apt-get install -y \
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev
 
-# Install project dependencies
-RUN npm install
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl gd zip
 
-# Copy the rest of the application files
+RUN a2enmod rewrite
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+COPY composer.json ./
+
+RUN composer install --no-interaction
+
 COPY . .
 
-# Build the application for production
-RUN npm run build
+COPY vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# Expose port 3000
-EXPOSE 3000
+RUN chown -R www-data:www-data /app
 
-# Command to run the application
-CMD [ "npm", "run", "preview" ]
+EXPOSE 80
+
+CMD ["apache2-foreground"]

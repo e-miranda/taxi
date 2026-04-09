@@ -1,2 +1,0 @@
-# taxi
-plicación de taxi
